@@ -1,0 +1,465 @@
+QUESTIONS WITH REAL EXPLANATIONS (NOT PLACEHOLDER)
+====================================================================================================
+
+Total: 15 questions
+Question Numbers: [7, 15, 62, 100, 105, 106, 109, 110, 114, 116, 117, 118, 119, 120, 121]
+
+====================================================================================================
+
+
+################################################################################
+# QUESTION 7
+################################################################################
+
+> 
+
+## Answer: **D. Array of Mule Event Objects**
+
+### Key Concept: File List Operation
+
+The **File List** operation (from File, FTP, or SFTP connector) scans a directory and returns an **Array of Mule Messages**, where each item represents one file.
+
+Each element in the array is a **Mule event object** containing:
+
+- **Payload** → the file content
+- **Attributes** → metadata like filename, size, path, timestamps
+
+### Why this matters?
+
+You can iterate over the result with a **For Each** scope, and inside each iteration, `payload` = file content and `attributes` = file metadata.
+
+### Why not the others?
+
+| Option | Why wrong |
+| --- | --- |
+| A & B. Strings | Too simplistic — you'd lose all file metadata |
+| C. Object (single) | It's a **list** of files, so it must be an Array |
+
+
+################################################################################
+# QUESTION 15
+################################################################################
+
+> 
+    
+    ## Answer: **B. Classloader isolation exists between the application, the runtime and connectors, and policies.**
+    
+    ---
+    
+    ### 🧠 What is a ClassLoader?
+    
+    A **ClassLoader** is a Java mechanism that **loads classes (code) into memory**. Since Mule runs on Java, everything (your app, connectors, policies) is made of Java classes.
+    
+    > Think of it like separate **sandboxes** — each component loads its own libraries without interfering with others.
+    > 
+    
+    ---
+    
+    ### Key Concept: ClassLoader Isolation in Mule
+    
+    Mule enforces **strict classloader isolation**, meaning:
+    
+    | Layer | Isolated? |
+    | --- | --- |
+    | Your Mule App | ✅ Own classloader |
+    | Runtime & Connectors | ✅ Own classloader |
+    | Policies | ✅ Own classloader |
+    
+    Each layer **cannot see or conflict with** the classes of another layer.
+    
+    ---
+    
+    ### Why does this matter for Policies?
+    
+    Policies (like rate limiting, auth) are applied to APIs and run as **separate units**. Thanks to isolation:
+    
+    - A policy's libraries **won't clash** with your app's libraries
+    - Different versions of the same library can coexist
+    - More **stability and security**
+    
+    ---
+    
+    ### Why not the others?
+    
+    | Option | Why wrong |
+    | --- | --- |
+    | A. No isolation | Isolation **does** exist |
+    | C. None of these | B is correct |
+    | D. Partially | Isolation is **full**, not partial |
+
+
+################################################################################
+# QUESTION 62
+################################################################################
+
+> 
+    
+    In DAtaWeave 2.0, named fucntions use = not → :
+    
+    ```java
+    ````
+    fun newProdCode(itemID: Number, productCategory: String) =
+    "PC?" ++ productCategory ++ (itemID as String)
+    
+    ```
+
+
+################################################################################
+# QUESTION 100
+################################################################################
+
+> 
+    
+    **Key rule:** For Each restores the **payload** after completion, but **variables persist!**
+
+
+################################################################################
+# QUESTION 105
+################################################################################
+
+> 
+    
+    ## Answer: **B. "Object"**
+    
+    ### Key Concept: typeOf() returns DataWeave type, not format
+    
+    The Set Payload uses a **DataWeave expression** `#[{...}]` which creates an **Object in memory** — not a JSON string.
+    
+    ---
+    
+    ### 🔑 Object vs JSON Syntax
+    
+    |  | Object (DataWeave) | JSON (String) |
+    | --- | --- | --- |
+    | **What it is** | Data structure in memory | Text format |
+    | **Syntax** | `#[{ "key": "value" }]` | `'{"key": "value"}'` |
+    | **typeOf()** | `"Object"` ✅ | `"String"` |
+    | **Example** | `#[{ name: "John" }]` | `'{"name":"John"}'` |
+    
+    ---
+    
+    ### Simple analogy 🧠
+    
+    `JSON   = a letter written on paper  (text)
+    Object = the actual information 
+             living in your brain       (memory)`
+    
+    ---
+    
+    ### In this flow:
+    
+    dataweave
+    
+    `// This is a DataWeave OBJECT (in memory)
+    #[{
+      "accounts": {
+        "account": { ... }
+      }
+    }]
+    
+    typeOf(payload) → "Object" ✅`
+    
+    dataweave
+    
+    `// This would be a STRING (JSON text)
+    '{"accounts": {"account": {...}}}'
+    
+    typeOf(payload) → "String"`
+    
+    ---
+    
+    ### Why not the others?
+    
+    | Option | Why wrong |
+    | --- | --- |
+    | A. String | Only if set with quotes `'...'` |
+    | C. Array | No `[ ]` at root level |
+    | D. JSON | JSON is a **format**, not a DataWeave type |
+    
+    > 💡 **Rule:** `#[{...}]` = **Object** in memory. Only becomes JSON when you set `output application/json`!
+    >
+
+
+################################################################################
+# QUESTION 106
+################################################################################
+
+> 
+    
+    [https://docs.mulesoft.com/gateway/latest/policies-included-rate-limiting-sla](https://docs.mulesoft.com/gateway/latest/policies-included-rate-limiting-sla)
+
+
+################################################################################
+# QUESTION 109
+################################################################################
+
+> 
+    
+    [https://blogs.mulesoft.com/biz/connectivity/what-is-a-center-for-enablement-c4e/](https://blogs.mulesoft.com/biz/connectivity/what-is-a-center-for-enablement-c4e/)
+
+
+################################################################################
+# QUESTION 110
+################################################################################
+
+> 
+    
+    [https://docs.mulesoft.com/runtime-manager/developing-applications-for-cloudhub](https://docs.mulesoft.com/runtime-manager/developing-applications-for-cloudhub)
+
+
+################################################################################
+# QUESTION 114
+################################################################################
+
+> 
+    
+    ## Answer: **A. US**
+    
+    ### Tracing the flow step by step:
+    
+    ---
+    
+    ### Step 1: Set Payload
+    
+    `payload = "REGION"  (a non-empty String)`
+    
+    ### Step 2: Choice Router — evaluates conditions **in order**:
+    
+    `Condition 1: #[not isEmpty(payload)]
+                 not isEmpty("REGION") = TRUE ✅
+                 → Sets payload = "US"
+                 → STOPS here! (no more conditions checked)`
+    
+    > Choice router works like **if/else if** — **first match wins!**
+    > 
+    
+    ---
+    
+    ### Step 3: Logger (after Choice)
+    
+    `payload = "US" ✅`
+    
+    ---
+    
+    ### Why Condition 2 never runs:
+    
+    `#[payload is String] 
+    → would also be TRUE for "REGION"
+    → BUT never reached because Condition 1 
+       already matched!`
+    
+    ### Why not the others?
+    
+    | Option | Why wrong |
+    | --- | --- |
+    | B. "REGION" | Payload was changed to "US" by Choice |
+    | C. EU | Condition 2 never evaluated |
+    | D. ["US","EU"] | Choice only executes **one** matching route |
+    
+    > 💡 **Key rule:** Choice router = **first matching condition wins** and exits. It does NOT evaluate all conditions!
+    >
+
+
+################################################################################
+# QUESTION 116
+################################################################################
+
+>
+
+    Flow Reference passes the entire Mule Event (payload, variables, and attributes including query params) to the child flow.
+
+
+################################################################################
+# QUESTION 117
+################################################################################
+
+> 
+    
+    Key Rule: Databases return Arrays
+
+
+################################################################################
+# QUESTION 118
+################################################################################
+
+> 
+    
+    [https://docs.mulesoft.com/design-center/design-common-problems-raml-10](https://docs.mulesoft.com/design-center/design-common-problems-raml-10)
+
+
+################################################################################
+# QUESTION 119
+################################################################################
+
+> 
+    
+    ## Answer: **A. 1**
+    
+    ### Key Concept: APIkit Router
+    
+    APIkit generates **ONE single Router component** per RAML spec — it acts as the central dispatcher for ALL endpoints.
+    
+    ---
+    
+    ### What APIkit actually generates:
+    
+    `1 × APIkit Router        ← ONE router only!
+    +
+    1 × flow per endpoint:
+        GET /orders
+        POST /orders
+        GET /orders/order
+        PATCH /orders/order
+        GET /reports`
+    
+    ---
+    
+    ### How it works:
+    
+    `All requests
+         ↓
+    [1 APIkit Router]   ← single entry point
+         ↓
+    Routes to the correct flow based on:
+      - HTTP method (GET, POST, PATCH...)
+      - URI path (/orders, /reports...)`
+    
+    ---
+    
+    ### Counting endpoints (flows generated = 5):
+    
+    | Endpoint | Methods |
+    | --- | --- |
+    | `/orders` | GET, POST |
+    | `/orders/order` | GET, PATCH |
+    | `/reports` | GET |
+    
+    ---
+    
+    ### Why not the others?
+    
+    | Option | Why wrong |
+    | --- | --- |
+    | B. 2 | Not one per resource |
+    | C. 3 | Not one per resource path |
+    | D. 5 | That's the number of **flows**, not routers |
+    
+    > 💡 **Key rule:** Always **1 APIkit Router** per RAML spec regardless of how many endpoints exist — the router handles ALL routing internally!
+    >
+
+
+################################################################################
+# QUESTION 120
+################################################################################
+
+> 
+    
+    ## Answer: **C. "Success – main flow"**
+    
+    ### Key Concept: On Error Continue vs On Error Propagate
+    
+    | Handler | Behaviour |
+    | --- | --- |
+    | **On Error Continue** | Handles error, flow **continues** after the scope ✅ |
+    | **On Error Propagate** | Handles error, flow **stops** and propagates up ❌ |
+    
+    ---
+    
+    ### Tracing the flow:
+    
+    `1. Listener receives request
+            ↓
+    2. Try scope: Validation throws error ❌
+            ↓
+    3. On Error Continue (inside Try):
+       → payload = "Error - Try scope"
+       → CONTINUES flow after Try scope ✅
+            ↓
+    4. Set Payload = "Success - main flow" ✅
+       (On Error Propagate never triggered!)
+            ↓
+    5. Returns "Success - main flow" to client`
+    
+    ---
+    
+    ### Why On Error Propagate is NOT triggered:
+    
+    `Error was ALREADY handled by 
+    On Error Continue inside Try scope
+    → Main flow's error handler 
+      never sees the error!`
+    
+    ---
+    
+    ### Why not the others?
+    
+    | Option | Why wrong |
+    | --- | --- |
+    | A. "Error - main flow" | On Error Propagate never triggered |
+    | B. "Error - Try scope" | Flow continues AFTER Try scope |
+    | D. "Validation Error" | That's the error message, not the payload |
+    
+    > 💡 **Key rule:** **On Error Continue** = error handled, flow resumes normally after the scope. The main flow's error handler is **never reached**!
+    >
+
+
+################################################################################
+# QUESTION 121
+################################################################################
+
+> 
+    
+    ## Answer: **C. "Bik"**
+    
+    ### Tracing the flow step by step:
+    
+    ---
+    
+    ### First call (payload = "Blue"):
+    
+    `Choice evaluates:
+    ❌ "Blue" contains "Red"? NO
+    ❌ "Blue" contains "Bik"? NO
+    ✅ Default:
+       → Set Payload = "Red"
+       → Flow Reference "color" (recursive!)`
+    
+    ---
+    
+    ### Recursive call (payload = "Red"):
+    
+    `Choice evaluates:
+    ✅ "Red" contains "Red"? YES!
+       → Set Payload = "Bik"
+       → Returns "Bik" back to first call`
+    
+    ---
+    
+    ### Back in first call:
+    
+    `Flow Reference returns with payload = "Bik"
+    → Returns "Bik" to client ✅`
+    
+    ---
+    
+    ### Visual trace:
+    
+    `"Blue" → Default → "Red" → recursive call
+                                  ↓
+                             "Red" contains "Red" ✅
+                                  ↓
+                               "Bik" ← returned`
+    
+    ---
+    
+    ### Why not the others?
+    
+    | Option | Why wrong |
+    | --- | --- |
+    | A. "Green" | "Bik" condition never triggered on first pass |
+    | B. Timeout | Recursion only happens once — no infinite loop |
+    | D. Array | Flow returns single value, not array |
+    
+    > 💡 **Key:** The recursive call changes payload to "Red", which then matches the first condition and returns "Bik"!
+    >
+

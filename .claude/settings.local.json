@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx --version)",
+      "Bash(curl -sI http://localhost:60525/)",
+      "Bash(curl -sI http://localhost:61086/)",
+      "Bash(curl -sI -H 'Accept-Encoding: gzip' http://localhost:61086/app.js)",
+      "Bash(curl -sI http://localhost:61086/../../../etc/passwd)",
+      "Bash(curl -sI -X POST http://localhost:61086/)",
+      "Bash(python3 fix_explanations.py)",
+      "Bash(python3 -c \":*)"
+    ]
+  }
+}
