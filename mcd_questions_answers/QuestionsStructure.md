@@ -1090,12 +1090,10 @@ Anypoint MQ FIFO queues are limited to how many in flight messages per queue?
 
 ### Question 60
 
-Refer to the exhibit:
-
-![image.png](5a63dcd8-795c-4445-9317-0b5aeb7dc0ee.png)
-
 The error occurs when a project is run in Anypoint Studio. The project, which has a dependency that is not in the MuleSoft Maven repository, was created and successfully run on a different computer.
 What is the next step to fix the error to get the project to run successfully?
+
+![image.png](5a63dcd8-795c-4445-9317-0b5aeb7dc0ee.png)~
 
 - A. Add the dependency to the MULE_HOME/bin folder
 - B. Edit the dependency in the Mule project’s pom.xml file
@@ -1112,14 +1110,13 @@ What is the next step to fix the error to get the project to run successfully?
 
 ### Question 61
 
-![image.png](ee62c9c2-8bfd-4afc-9609-cd302b6a5629.png)
-
-
 In the requestFlow an HTTP Request operation is configured to send an HTTP request with an XML payload. The request is sent to the HTTP Listener in the transformFlow.
 
 That flow transforms the incoming payload into JSON format and returns the response to the HTTP request. The response of the request is stored in a target variable named theResult.
 
 What is the payload at the Logger component after the HTTP Request?
+
+![image.png](ee62c9c2-8bfd-4afc-9609-cd302b6a5629.png)
 
 - A. A non-empty Java object
 - B. The original XML payload
@@ -1162,10 +1159,9 @@ What is the correct DataWeave code to define the newProdCode function?
 
 ### Question 63
 
-![image.png](99448739-3630-44ba-968e-7d9c8af454ab.png)
-
-
 What can be added to the flow to persist data across different flow executions?
+
+![image.png](99448739-3630-44ba-968e-7d9c8af454ab.png)
 
 - A. Properties of the Mule runtime app object
 - B. Key/value pairs in the ObjectStore
@@ -1190,10 +1186,6 @@ What value must be used in the Input Parameters field of the Database Insert ope
 ![image.png](64_OpB.png)
 ![image.png](64_OpC.png)
 ![image.png](64_OpD.png)
-
-
-
-
 
 - **Correct Answer:**
     
@@ -1328,6 +1320,8 @@ What is the minimum number of global elements that must be defined to support al
 
 ### Question 71
 
+
+
 ![image.png](9ecc2fcb-71df-4fd9-ae8b-963f1f9abb56.png)
 
 - A. ‘The year is #[payload.year]’
@@ -1346,7 +1340,6 @@ What is the minimum number of global elements that must be defined to support al
 ### Question 72
 
 ![image.png](030a0d4e-878d-4320-8826-f15855ebdda3.png)
-
 
 - A. (customerID)
 - B. #[customerID]
@@ -1459,10 +1452,11 @@ What is the correct URI to get all retail finance accounts?
 
 ### Question 78
 
-![image.png](68e3672b-0d7f-4f19-a597-8aa4d1cdbf5a.png)
 
 This Mule application has an HTTP Request that is configured with hardcoded values. To change this, the Mule application is configured to use a properties file named config.yaml.
 What valid expression can the HTTP Request host value be set to so that it is no longer hardcoded?
+
+![image.png](68e3672b-0d7f-4f19-a597-8aa4d1cdbf5a.png)
 
 - A. ${training:host}
 - B. #[training.host]
@@ -1516,10 +1510,10 @@ What values are accessible to the Logger component at the end of the main flow?
 
 ---
 
+
 ### Question 81
 
 ![image.png](2cfbd95d-d13a-4bf8-a21e-758c54765bad.png)
-
 
 - A. Set a request header with the name Content-Type to a value of application/octet-stream
 - B. Set a request header with the name Content-Type to a value of application/xml
@@ -1555,7 +1549,6 @@ What values are accessible to the Logger component at the end of the main flow?
 ### Question 83
 
 ![image.png](22de30e7-38b7-4473-9d58-0b8815d2b121.png)
-
 
 - A. [ [“A”, “C”, “D”], [“E”] ]
 - B. [ “E” ]
@@ -1633,7 +1626,6 @@ What DataWeave expression transforms the conductorIds array to the XML output?
 
 ![image.png](b938b8b6-ab9a-477c-a31b-f0d9633b8296.png)
 
-
 - A. Summary report of processed records
 - B. [ “Apple”, “Banana” ]
 - C. [ “Apple12”, “Banana12” ]
@@ -1700,8 +1692,10 @@ An API specification is designed using RAML. What is the next step to create a R
 
 ### Question 91
 
-![image.png](6ae8c9da-37a3-42a9-95ec-e21748225f9a.png)
+A Mule event is composed of a hierarchy of objects.
+Where in the hierarchy are variables stored?
 
+![image.png](6ae8c9da-37a3-42a9-95ec-e21748225f9a.png)
 
 - A. Mule message attributes
 - B. Mule message
@@ -1745,7 +1739,7 @@ Where must the global error handler be specified so that the global error handle
 - D. A configuration properties file
 - **Correct Answer:**
     
-    > A *(community convention; listed answer D)*
+    > D
     >
 
 **Explained**
@@ -1757,9 +1751,6 @@ Where must the global error handler be specified so that the global error handle
 
 
 ![image.png](9a2b1bd7-b351-4a41-8565-7f35a110e4a4.png)
-
-
-
 
 1.
 
@@ -1832,6 +1823,7 @@ How many private flows does APIkit generate from the RAML specification?
 
 ### Question 97
 
+A web client 
 
 ![image.png](552d34f2-f54a-41a2-9bde-d2b0c361454f.png)
 
@@ -1900,7 +1892,8 @@ What is the correct way in DataWeave code to import MyModule using a wildcard an
 ---
 
 ### Question 100
-
+The validation component in the private flow throws an error.
+Waht response message is returned to a web client request to the main flow's HTTP Listener?
 
 ![image.png](773d78a3-da1a-4ea3-8509-a6e3d2c33282.png)
 
@@ -1911,15 +1904,17 @@ What is the correct way in DataWeave code to import MyModule using a wildcard an
 - D. Success - main flow
 - **Correct Answer:**
     
-    > D *(community voted D)*
+    > C
     >
 
 **Explained**
 
+
+
 ---
 
 ### Question 101
-
+What payload and quantity are logged at the end of the main flow?
 
 ![image.png](d8eb25a6-26ed-4425-888f-7e8d7039acef.png)
 
@@ -1940,6 +1935,8 @@ What is the correct way in DataWeave code to import MyModule using a wildcard an
 ---
 
 ### Question 102
+
+What data is expected by the POST /accounts endpoint?
 
 
 ![image.png](62cbf96e-b7be-404d-87a9-a622122c1437.png)
@@ -1979,7 +1976,6 @@ What is the correct way in DataWeave code to import MyModule using a wildcard an
 
 ![image.png](f0314f56-44c5-4d4f-b8ab-9f084627b80c.png)
 
-
 - A. “[FILE:CONNECTIVITY”](file:///CONNECTIVITY%E2%80%9D)
 - B. “ORDER:NOT_CREATED”
 - C. “OTHER ERROR”
@@ -1990,6 +1986,8 @@ What is the correct way in DataWeave code to import MyModule using a wildcard an
     >
 
 **Explained**
+
+A web client sends a POST request with the payload {'old': '1000', 'itemid': }
 
 ---
 
@@ -2014,10 +2012,11 @@ What is the correct way in DataWeave code to import MyModule using a wildcard an
 
 ### Question 105
 
+A JSON payload is set in the Set Payload transformer.
+
+What is logged by the Logger?
 
 ![image.png](84cdd89c-3466-49ef-8d1a-fa66bc9103ba.png)
-
-
 
 - A. “String”
 - B. “Object”
@@ -2277,7 +2276,7 @@ What export options create the smallest JAR file that can be imported into the o
 
 - **Correct Answer:**
     
-    > D
+    > B
     >
 
 **Explained**
@@ -3323,6 +3322,7 @@ What response message is returned to a web client request to the main flow’s H
 
 ![image.png](2e3f1562-dd68-4795-9329-dfda8a324312.png)
 
+
 - A. “Child error”
 - B. “Parent error”
 - C. “Validation Error”
@@ -3342,11 +3342,10 @@ Refer to the exhibits. A database Address table contains a ZIPCODE column and an
 
 ![image.png](dab2d766-edb9-455d-a879-1614948759ca.png)
 
-
-- A. ID: 1,2,3,4 (ZIPCODEs: 90001, 90005, 90009, 90001)
-- B. ID: 1,2,3,4,5 (ZIPCODEs: 90001, 90005, 90009, 90001, 90006)
-- C. ID: 1,2,3 (ZIPCODEs: 90001, 90005, 90009)
-- D. ID: 1,2,3,5 (ZIPCODEs: 90001, 90005, 90009, 90006)
+![image.png](151_A.png)
+![image.png](151_B.png)
+![image.png](151_C.png)
+![image.png](151_D.png)
 - **Correct Answer:**
     
     > A
@@ -3387,10 +3386,10 @@ Input payload:
 ![image.png](553b9e2a-85e0-4ba5-8c5a-6a3b200f519e.png)
 ![image.png](2596cacd-e5f6-4a17-83e5-3fbf732a6409.png)
 
-- A. #[{item: payload.items, shippingInfo: vars.shippingAddress}]
-- B. %dw 2.0 output application/json --- { item: payload.items, shippingInfo: vars.shippingAddress }
-- C. %dw 2.0 output application/json --- { item: payload.items, shippingInfo: shippingAddress }
-- D. #[{item: vars.payload.items, shippingInfo: vars.shippingAddress}]
+- A. Option A
+- B. Option B
+- C. Option C
+- D. Option D
 - **Correct Answer:**
     
     > B

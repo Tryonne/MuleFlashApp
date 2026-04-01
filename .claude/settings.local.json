@@ -9,7 +9,8 @@
       "Bash(curl -sI http://localhost:61086/../../../etc/passwd)",
       "Bash(curl -sI -X POST http://localhost:61086/)",
       "Bash(python3 fix_explanations.py)",
-      "Bash(python3 -c \":*)"
+      "Bash(python3 -c \":*)",
+      "Bash(node:*)"
     ]
   }
 }

@@ -11,9 +11,25 @@ let questions = []; // current working set (may be shuffled)
 let currentIndex = 0;
 let answered = {}; // questionId -> { selected, correct }
 let score = { correct: 0, wrong: 0 };
-let showAll = true;
 let isShuffled = false;
 let panelFilter = 'all';
+
+// ===== Utilities =====
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function debounce(fn, delay) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    };
+}
 
 // ===== Exam State =====
 let examMode = null;
@@ -177,110 +193,127 @@ function parseMarkdown(md) {
 }
 
 function parseQuestionBlock(block, qNum) {
-    const images = [];
-    const imageRegex = /!\[.*?\]\(([^)]+)\)/g;
-    let imgMatch;
-    while ((imgMatch = imageRegex.exec(block)) !== null) {
-        const imgPath = imgMatch[1];
-        if (/^[a-zA-Z0-9_\-]+\.\w+$/.test(imgPath)) {
-            images.push(imgPath);
-        }
-    }
+    // ── 1. Split at answer boundary first ────────────────────────────────
+    // Everything before **Correct Answer:** is the question area.
+    // Everything after is the answer/explanation area.
+    // This prevents images or text in explanations from contaminating question parsing.
+    const answerMarkerIdx = block.indexOf('**Correct Answer:**');
+    if (answerMarkerIdx === -1) return null;
+    const questionArea = block.substring(0, answerMarkerIdx);
+    const answerArea   = block.substring(answerMarkerIdx);
 
-    const correctAnswerRegex = /\*\*Correct Answer:\*\*[\s\S]*?>\s*([A-Z](?:\s*(?:and|,|&)\s*[A-Z])*)/;
-    const correctMatch = block.match(correctAnswerRegex);
+    // ── 2. Parse correct answer from answer area only ────────────────────
+    const correctMatch = answerArea.match(/>\s*([A-Z](?:\s*(?:and|,|&)\s*[A-Z])*)/);
     if (!correctMatch) return null;
+    const correctLetters = correctMatch[1]
+        .replace(/\s*(and|,|&)\s*/g, ',').split(',').map(l => l.trim());
 
-    const correctLetters = correctMatch[1].replace(/\s*(and|,|&)\s*/g, ',').split(',').map(l => l.trim());
-
+    // ── 3. Parse text options from question area ─────────────────────────
     const optionRegex = /^-\s+([A-Z])\.\s+(.+)$/gm;
     const options = [];
     let optMatch;
-    while ((optMatch = optionRegex.exec(block)) !== null) {
-        if (optMatch[2].startsWith('**Correct Answer')) continue;
+    while ((optMatch = optionRegex.exec(questionArea)) !== null) {
         options.push({ letter: optMatch[1], text: optMatch[2].trim() });
     }
 
-    let textBlock = block;
-    const firstOptionMatch = textBlock.match(/^-\s+[A-Z]\.\s+/m);
-    const firstOptionPos = firstOptionMatch ? textBlock.indexOf(firstOptionMatch[0]) : -1;
-    const correctAnswerPos = textBlock.indexOf('- **Correct Answer:**');
-    const correctAnswerPos2 = textBlock.indexOf('**Correct Answer:**');
+    // ── 4. Determine the image search boundary ───────────────────────────
+    // Images should only come from before the first text option.
+    // If there are no text options, all of questionArea is the image search area.
+    const firstOptMatch = questionArea.match(/^-\s+[A-Z]\.\s+/m);
+    const firstOptPos   = firstOptMatch ? questionArea.indexOf(firstOptMatch[0]) : questionArea.length;
+    const imageSearchArea = questionArea.substring(0, firstOptPos);
 
-    let cutoff = textBlock.length;
-    if (firstOptionPos > 0) cutoff = Math.min(cutoff, firstOptionPos);
-    if (correctAnswerPos > 0) cutoff = Math.min(cutoff, correctAnswerPos);
-    if (correctAnswerPos2 > 0) cutoff = Math.min(cutoff, correctAnswerPos2);
+    // ── 5. Collect images from imageSearchArea only ──────────────────────
+    const imageRegex = /!\[.*?\]\(([^)]+)\)/g;
+    const images = [];
+    let imgMatch;
+    while ((imgMatch = imageRegex.exec(imageSearchArea)) !== null) {
+        // Strip trailing junk characters (e.g. stray ~ in source)
+        const imgPath = imgMatch[1].replace(/[~\s]+$/, '').trim();
+        if (/^[a-zA-Z0-9_\-]+\.\w+$/.test(imgPath)) images.push(imgPath);
+    }
 
-    let questionTextArea = textBlock.substring(0, cutoff);
-    questionTextArea = questionTextArea.replace(/!\[.*?\]\([^)]+\)/g, '');
-    questionTextArea = questionTextArea.replace(/^\s*image\.png\s*$/gm, '');
-    const exhibitMatch = questionTextArea.match(/\*\(Refer to exhibits?.*?\)\*/);
-    const exhibitText = exhibitMatch ? exhibitMatch[0].replace(/\*/g, '').replace(/[()]/g, '') : '';
-    questionTextArea = questionTextArea.replace(/^\s*\*\(Refer to exhibits?.*?\)\*\s*$/gm, '');
-    questionTextArea = questionTextArea.replace(/^\s*\d+\.\s*$/gm, '');
-    questionTextArea = questionTextArea.replace(/^---\s*$/gm, '');
-    questionTextArea = questionTextArea.trim();
+    // ── 6. Extract question text ─────────────────────────────────────────
+    let questionTextArea = imageSearchArea
+        .replace(/!\[.*?\]\([^)]+\)/g, '')               // strip image refs
+        .replace(/^\s*image\.png\s*$/gm, '')              // strip bare image.png lines
+        .replace(/^\s*\*\(Refer to exhibits?.*?\)\*\s*$/gm, '') // strip exhibit notes
+        .replace(/^\s*\d+\.\s*$/gm, '')                   // strip standalone numbered markers
+        .replace(/^---\s*$/gm, '')                        // strip HR lines
+        .trim();
+    const exhibitMatch = imageSearchArea.match(/\*\(Refer to exhibits?.*?\)\*/);
+    const exhibitText  = exhibitMatch
+        ? exhibitMatch[0].replace(/\*/g, '').replace(/[()]/g, '')
+        : '';
 
+    // ── 7. Split images into exhibit (questionImages) vs option images ───
     let questionImages = [];
-    let optionImages = [];
-    const beforeAnswer = block.substring(0, block.indexOf('**Correct Answer:**'));
-    const hasNumberedItems = /^\s*\d+\.\s*$/m.test(beforeAnswer);
-    const numberedCount = (beforeAnswer.match(/^\s*\d+\.\s*$/gm) || []).length;
+    let optionImages   = [];
 
-    if (options.length === 0 && images.length > 0) {
-        if (hasNumberedItems && images.length > 2) {
-            const exhibitCount = images.length - numberedCount;
-            if (exhibitCount > 0) {
-                questionImages = images.slice(0, exhibitCount);
-                optionImages = images.slice(exhibitCount);
-            } else {
-                optionImages = images;
+    if (options.length > 0) {
+        // Text options exist: every image in imageSearchArea is an exhibit diagram
+        questionImages = images;
+    } else if (images.length > 0) {
+        // No text options: detect whether images are exhibits or image-based answer choices
+        // Numbered-list markers (standalone "1.") indicate image-based options
+        const hasNumberedItems = /^\s*\d+\.\s*$/m.test(imageSearchArea);
+        const numberedCount    = (imageSearchArea.match(/^\s*\d+\.\s*$/gm) || []).length;
+
+        if (hasNumberedItems) {
+            // Each numbered marker corresponds to one image-option
+            const exhibitCount = Math.max(0, images.length - numberedCount);
+            questionImages = images.slice(0, exhibitCount);
+            optionImages   = images.slice(exhibitCount);
+        } else if (images.length === 1) {
+            // Single image — the image itself shows all options (Q62-style)
+            questionImages = images;
+        } else {
+            // Multiple images, no markers: first image = exhibit, rest = image options (Q64/Q82/Q86-style)
+            questionImages = [images[0]];
+            optionImages   = images.slice(1);
+        }
+
+        // Generate labeled option buttons for image-based options
+        if (optionImages.length > 0) {
+            const letters = 'ABCDEFGH';
+            for (let i = 0; i < optionImages.length; i++) {
+                options.push({
+                    letter: letters[i] || String(i + 1),
+                    text: `Option ${letters[i] || (i + 1)}`,
+                    isImageOption: true
+                });
             }
         } else if (images.length === 1) {
-            questionImages = images;
+            // Single-image question: create placeholder buttons A–D
             const letters = 'ABCDEFGH';
             for (let i = 0; i < 4; i++) {
                 options.push({ letter: letters[i], text: `Option ${letters[i]} (see image)`, isImageOption: true });
             }
-        } else if (images.length > 1) {
-            questionImages = [images[0]];
-            optionImages = images.slice(1);
         }
-        if (optionImages.length > 0 && options.length === 0) {
-            const letters = 'ABCDEFGH';
-            for (let i = 0; i < optionImages.length; i++) {
-                options.push({ letter: letters[i] || String(i + 1), text: `Option ${letters[i] || (i + 1)}`, isImageOption: true });
-            }
-        }
-    } else {
-        questionImages = images;
     }
 
+    // ── 8. Extract explanation from answer area ──────────────────────────
     let explanation = '';
-    const correctAnswerEnd = block.indexOf('> ' + correctLetters[0]);
-    if (correctAnswerEnd !== -1) {
-        const afterAnswer = block.substring(correctAnswerEnd);
-        const explanationMatch = afterAnswer.match(/>\s*\n\s*\n([\s\S]+?)(?=\n---|\n###|$)/);
-        if (explanationMatch) {
-            explanation = explanationMatch[1].trim();
-            explanation = explanation.replace(/^\s{4}/gm, '');
-            if (explanation.length < 20) explanation = '';
-        }
+    const explanationMatch = answerArea.match(/>\s*\n\s*\n([\s\S]+?)(?=\n---|\n###|$)/);
+    if (explanationMatch) {
+        explanation = explanationMatch[1].trim().replace(/^\s{4}/gm, '');
+        if (explanation.length < 20) explanation = '';
     }
-    const answerBlockRegex = /## Answer:\s*\*\*([^*]+)\*\*[\s\S]*?(?=---)/;
-    const answerBlockMatch = block.match(answerBlockRegex);
-    if (answerBlockMatch && !explanation) {
-        const fullBlock = block.substring(block.indexOf(answerBlockMatch[0]));
-        const endPos = fullBlock.indexOf('\n---');
-        explanation = endPos > 0 ? fullBlock.substring(0, endPos) : fullBlock;
-        explanation = explanation.replace(/^## Answer:.*$/m, '').trim();
+    if (!explanation) {
+        const answerBlockMatch = block.match(/## Answer:\s*\*\*([^*]+)\*\*[\s\S]*?(?=---)/);
+        if (answerBlockMatch) {
+            const ansBlock = block.substring(block.indexOf(answerBlockMatch[0]));
+            const endPos   = ansBlock.indexOf('\n---');
+            explanation = (endPos > 0 ? ansBlock.substring(0, endPos) : ansBlock)
+                .replace(/^## Answer:.*$/m, '').trim();
+        }
     }
 
     return {
         id: qNum, number: qNum,
         text: questionTextArea || exhibitText || `Question ${qNum} — Refer to the image(s)`,
-        options, correctAnswers: correctLetters, images: questionImages, optionImages, explanation
+        options, correctAnswers: correctLetters,
+        images: questionImages, optionImages, explanation
     };
 }
 
@@ -497,15 +530,7 @@ function shuffleQuestions() {
     if (examMode) return;
     isShuffled = !isShuffled;
     els.btnShuffle.classList.toggle('active', isShuffled);
-    if (isShuffled) {
-        questions = [...allQuestions];
-        for (let i = questions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [questions[i], questions[j]] = [questions[j], questions[i]];
-        }
-    } else {
-        questions = [...allQuestions];
-    }
+    questions = isShuffled ? shuffleArray([...allQuestions]) : [...allQuestions];
     currentIndex = 0;
     saveState();
     renderQuestion();
@@ -517,14 +542,7 @@ function resetSession() {
     answered = {};
     score = { correct: 0, wrong: 0 };
     currentIndex = 0;
-    if (isShuffled) {
-        for (let i = questions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [questions[i], questions[j]] = [questions[j], questions[i]];
-        }
-    } else {
-        questions = [...allQuestions];
-    }
+    questions = isShuffled ? shuffleArray([...allQuestions]) : [...allQuestions];
     saveState();
     renderQuestion();
     scrollToTop();
@@ -546,12 +564,7 @@ function startExam() {
     const totalCount = countValue === 'all' ? allQuestions.length : parseInt(countValue);
 
     // Select random questions
-    const pool = [...allQuestions];
-    for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    const examQuestions = pool.slice(0, Math.min(totalCount, pool.length));
+    const examQuestions = shuffleArray([...allQuestions]).slice(0, Math.min(totalCount, allQuestions.length));
 
     examMode = {
         questions: examQuestions,
@@ -903,15 +916,6 @@ function renderPanelList() {
             ${statusIcon ? `<span class="panel-item-status">${statusIcon}</span>` : ''}
         </div>`;
     }).join('');
-
-    els.panelList.querySelectorAll('.panel-item').forEach(item => {
-        item.addEventListener('click', () => {
-            currentIndex = parseInt(item.dataset.index);
-            renderQuestion();
-            closePanel();
-            scrollToTop();
-        });
-    });
 }
 
 function scrollToTop() {
@@ -1015,7 +1019,17 @@ async function init() {
     els.btnShowAll.addEventListener('click', togglePanel);
     els.panelClose.addEventListener('click', closePanel);
     els.panelOverlay.addEventListener('click', closePanel);
-    els.panelSearch.addEventListener('input', renderPanelList);
+    els.panelSearch.addEventListener('input', debounce(renderPanelList, 200));
+
+    // Panel item clicks — single delegated listener
+    els.panelList.addEventListener('click', (e) => {
+        const item = e.target.closest('.panel-item');
+        if (!item) return;
+        currentIndex = parseInt(item.dataset.index);
+        renderQuestion();
+        closePanel();
+        scrollToTop();
+    });
 
     // Panel filter buttons
     document.querySelectorAll('.panel-filter').forEach(btn => {
@@ -1087,9 +1101,7 @@ async function init() {
                 <p style="color: var(--wrong); font-size: 1.1rem; margin-bottom: 10px;">Failed to load questions</p>
                 <p style="color: var(--text-muted); font-size: 0.85rem;">${sanitize(err.message)}</p>
                 <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 16px;">
-                    Make sure to serve this app via a local HTTP server.<br>
-                    e.g. <code style="background:#222;padding:2px 6px;border-radius:3px;">npx serve .</code> or
-                    <code style="background:#222;padding:2px 6px;border-radius:3px;">python -m http.server 8000</code>
+                    Make sure <code style="background:#222;padding:2px 6px;border-radius:3px;">mcd_questions_answers/QuestionsStructure.md</code> exists in the app directory.
                 </p>
             </div>`;
     }
