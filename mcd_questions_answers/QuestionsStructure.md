@@ -3508,7 +3508,6 @@ What attribute value must be changed in the webClient flow’s HTTP Request oper
 
 ### Question 160
 
-
 ![image.png](50095c15-9119-4105-9edc-4ec60e7889bd.png)
 
 - A. “[FILE:CONNECTIVITY”](file:///CONNECTIVITY%E2%80%9D)

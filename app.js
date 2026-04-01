@@ -150,7 +150,7 @@ const els = {};
 function initElements() {
     const ids = [
         'loadingScreen', 'flashcard', 'questionBadge', 'questionCategory',
-        'questionImageContainer', 'questionImage', 'questionText',
+        'questionImageContainer', 'questionText',
         'optionImagesContainer', 'optionsContainer', 'feedback',
         'feedbackIcon', 'feedbackText', 'explanation',
         'btnPrev', 'btnNext', 'navCounter', 'progressText', 'progressFill',
@@ -293,10 +293,21 @@ function parseQuestionBlock(block, qNum) {
     }
 
     // ── 8. Extract explanation from answer area ──────────────────────────
+    // **Explained** is the section terminator — stop there.
+    // Fall back to the unindented --- block separator only when no terminator exists.
+    // Use greedy capture to avoid stopping early inside DataWeave code (which uses --- syntax).
     let explanation = '';
-    const explanationMatch = answerArea.match(/>\s*\n\s*\n([\s\S]+?)(?=\n---|\n###|$)/);
+    const explanationMatch = answerArea.match(/>\s*\n\s*\n([\s\S]+)/);
     if (explanationMatch) {
-        explanation = explanationMatch[1].trim().replace(/^\s{4}/gm, '');
+        let raw = explanationMatch[1];
+        const termIdx = raw.indexOf('**Explained**');
+        if (termIdx !== -1) {
+            raw = raw.substring(0, termIdx);
+        } else {
+            const hrIdx = raw.indexOf('\n---');
+            if (hrIdx !== -1) raw = raw.substring(0, hrIdx);
+        }
+        explanation = raw.trim().replace(/^\s{4}/gm, '').trim();
         if (explanation.length < 20) explanation = '';
     }
     if (!explanation) {
@@ -387,20 +398,16 @@ function renderCard() {
         els.questionBadge.textContent = `Question ${q.number}`;
     }
 
-    // Question images
+    // Question images — always use innerHTML so stale content from multi-image
+    // questions never persists on the next card (avoids detached-node bug)
     if (q.images.length > 0) {
         els.questionImageContainer.style.display = 'block';
-        if (q.images.length === 1) {
-            els.questionImage.src = IMAGE_BASE_PATH + q.images[0];
-            els.questionImage.style.display = 'block';
-        } else {
-            els.questionImageContainer.innerHTML = q.images.map(img =>
-                `<img src="${IMAGE_BASE_PATH}${img}" class="question-image" alt="Question diagram" />`
-            ).join('');
-        }
+        els.questionImageContainer.innerHTML = q.images.map(img =>
+            `<img src="${IMAGE_BASE_PATH}${img}" class="question-image" alt="Question diagram" />`
+        ).join('');
     } else {
         els.questionImageContainer.style.display = 'none';
-        els.questionImage.src = '';
+        els.questionImageContainer.innerHTML = '';
     }
 
     els.questionText.innerHTML = formatText(q.text);
