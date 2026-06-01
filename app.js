@@ -240,6 +240,7 @@ function parseQuestionBlock(block, qNum) {
         .replace(/^\s*\*\(Refer to exhibits?.*?\)\*\s*$/gm, '') // strip exhibit notes
         .replace(/^\s*\d+\.\s*$/gm, '')                   // strip standalone numbered markers
         .replace(/^---\s*$/gm, '')                        // strip HR lines
+        .replace(/\s*-\s*$/, '')                          // strip trailing list marker left over from answer boundary
         .trim();
     const exhibitMatch = imageSearchArea.match(/\*\(Refer to exhibits?.*?\)\*/);
     const exhibitText  = exhibitMatch

@@ -232,8 +232,7 @@ In the Database On Table Row operation, what does the Watermark column enable th
 
 ### Question 13
 
-An API has been created in Design Center.
-
+An API has been created in Design Center.   
 What is the next step to make the API discoverable?
 
 - A. Deploy the API to a Maven repository.
@@ -283,26 +282,12 @@ How is policy defined in terms of classloader of an API?
     
     ---
     
-    ### 🧠 What is a ClassLoader?
+    ### What is a ClassLoader?
     
     A **ClassLoader** is a Java mechanism that **loads classes (code) into memory**. Since Mule runs on Java, everything (your app, connectors, policies) is made of Java classes.
     
     > Think of it like separate **sandboxes** — each component loads its own libraries without interfering with others.
-    > 
     
-    ---
-    
-    ### Key Concept: ClassLoader Isolation in Mule
-    
-    Mule enforces **strict classloader isolation**, meaning:
-    
-    | Layer | Isolated? |
-    | --- | --- |
-    | Your Mule App | ✅ Own classloader |
-    | Runtime & Connectors | ✅ Own classloader |
-    | Policies | ✅ Own classloader |
-    
-    Each layer **cannot see or conflict with** the classes of another layer.
     
     ---
     
@@ -1093,7 +1078,7 @@ Anypoint MQ FIFO queues are limited to how many in flight messages per queue?
 The error occurs when a project is run in Anypoint Studio. The project, which has a dependency that is not in the MuleSoft Maven repository, was created and successfully run on a different computer.
 What is the next step to fix the error to get the project to run successfully?
 
-![image.png](5a63dcd8-795c-4445-9317-0b5aeb7dc0ee.png)~
+![image.png](5a63dcd8-795c-4445-9317-0b5aeb7dc0ee.png)
 
 - A. Add the dependency to the MULE_HOME/bin folder
 - B. Edit the dependency in the Mule project’s pom.xml file
@@ -2505,9 +2490,9 @@ A company has an API to manage departments, with each department identified by a
 
 Refer to the exhibit. APIkit is used to generate flow components for the RAML specification.
 
-![image.png](4b63b5f3-1b78-4dbc-a85f-8f2b4ccf5491.png)
-
 How many APIkit Router components are generated to handle requests to every endpoint defined in the RAML specification?
+
+![image.png](4b63b5f3-1b78-4dbc-a85f-8f2b4ccf5491.png)
 
 - A. 1
 - B. 2
@@ -3113,7 +3098,7 @@ If the Mule application starts correctly, what URI and port number(s) can receiv
 
 ### Question 141
 
-Refer to the exhibits. In the Choice router, the When expression for the domesticShipping route is set to “#[payload =’FR’]”
+When the shipOrder flow receives a request at HTTP /ship, with the payload set to 'US', what will be the result logged by the Logger component after the Choice router evaluates the When expression '#[payload = "FR"]'?
 
 ![image.png](fafe259d-b20f-4f44-a048-449a9dae5f73.png)
 ![image.png](5a7c44c1-59d8-44ec-8277-01e863890707.png)
@@ -3346,12 +3331,11 @@ Refer to the exhibits. A database Address table contains a ZIPCODE column and an
 ![image.png](151_B.png)
 ![image.png](151_C.png)
 ![image.png](151_D.png)
+
 - **Correct Answer:**
     
     > A
     >
-
-**Explained**
 
 ---
 
@@ -3425,7 +3409,7 @@ What attribute value must be changed in the webClient flow’s HTTP Request oper
 ![image.png](fdaa4854-8096-497b-8b9e-8f7779286568.png)
 
 
-- **Correct Answer:**
+**Correct Answer:**
     
     > A
     >
