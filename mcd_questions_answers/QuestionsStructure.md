@@ -1724,7 +1724,7 @@ Where must the global error handler be specified so that the global error handle
 - D. A configuration properties file
 - **Correct Answer:**
     
-    > D
+    > A
     >
 
 **Explained**
@@ -2500,7 +2500,7 @@ How many APIkit Router components are generated to handle requests to every endp
 - D. 5
 - **Correct Answer:**
     
-    > D
+    > A
     > 
     
     ## Answer: **A. 1**
@@ -3001,6 +3001,8 @@ What is the output type of the DataWeave flatten function?
 
 Refer to the exhibits. The main flow contains a Flow Reference component configured to call the child flow.
 
+What data is passed to the child flow when the Flow Reference component is called from the main flow?
+
 ![image.png](ef51f891-3d38-4eff-a01c-3774b42d92ad.png)
 
 
@@ -3098,7 +3100,8 @@ If the Mule application starts correctly, what URI and port number(s) can receiv
 
 ### Question 141
 
-When the shipOrder flow receives a request at HTTP /ship, with the payload set to 'US', what will be the result logged by the Logger component after the Choice router evaluates the When expression '#[payload = "FR"]'?
+
+In the shipOrder flow, the payload is set to 'US'. The Choice router evaluates the When expression #[payload = 'FR'] for the domesticShipping route. What is the result when a request is made to HTTP: /ship?
 
 ![image.png](fafe259d-b20f-4f44-a048-449a9dae5f73.png)
 ![image.png](5a7c44c1-59d8-44ec-8277-01e863890707.png)
