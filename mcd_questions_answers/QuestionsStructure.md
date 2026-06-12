@@ -2879,9 +2879,10 @@ For each method of the RAML specification, what does the REST Connect module pro
 
 ### Question 130
 
-Refer to the exhibits. The Batch Job scope contains two Batch Step scopes with different accept expressions.
+The Batch Job scope contains two Batch Step scopes with different accept expressions.
 
 Input payload:
+
 The input payload is passed to the Batch Job scope.
 After the entire payload is processed by the Batch Job Scope, what messages have been logged by the Logger components?
 
