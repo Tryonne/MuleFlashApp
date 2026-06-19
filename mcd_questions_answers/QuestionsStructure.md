@@ -3383,12 +3383,12 @@ Input payload:
     > B
     >
 
-**Explained**
+    ### **Explained**
 
-    The Shipping Address operation has its target set to shippingAddress. When you configure a target on a connector operation, the operation's response gets stored in a variable instead of overwriting the payload. That means the original payload (with the user and items) remains untouched.
+        The Shipping Address operation has its target set to shippingAddress. When you configure a target on a connector operation, the operation's response gets stored in a variable instead of overwriting the payload. That means the original payload (with the user and items) remains untouched.
 
 ---
-
+ 
 ### Question 154
 
 An HTTP:METHOD_NOT_ALLOWED error is thrown each time the webClient flow executes.
