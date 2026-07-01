@@ -121,25 +121,8 @@ What is the value of the stepVar variable after the processing of records in a B
 
 ## Answer: **D. Array of Mule Event Objects**
 
-### Key Concept: File List Operation
-
-The **File List** operation (from File, FTP, or SFTP connector) scans a directory and returns an **Array of Mule Messages**, where each item represents one file.
-
-Each element in the array is a **Mule event object** containing:
-
-- **Payload** → the file content
-- **Attributes** → metadata like filename, size, path, timestamps
-
-### Why this matters?
-
-You can iterate over the result with a **For Each** scope, and inside each iteration, `payload` = file content and `attributes` = file metadata.
-
-### Why not the others?
-
-| Option | Why wrong |
-| --- | --- |
-| A & B. Strings | Too simplistic — you'd lose all file metadata |
-| C. Object (single) | It's a **list** of files, so it must be an Array |
+In a Batch Job, variables that are set or modified inside a batch step are scoped to each individual record during processing. They do not propagate back to the flow level after the batch job completes.
+So if stepVar was created inside a batch step, it simply doesn't exist outside the batch scope, making its value null after processing finishes. Variables set before the batch job retain their original pre-batch values, but anything created or changed within the batch steps stays isolated to the record-level processing.
 
 **Explained**
 
@@ -871,7 +854,7 @@ What does the minus operator do in DataWeave?
 
 ### Question 48
 
-Does a root element need when creating a response using Dataweave?
+Does a root element need output when creating a response using Dataweave?
 
 - A. None of these
 - B. Sometimes
@@ -1260,6 +1243,9 @@ About how many seconds does it take from the time the Scatter-Gather is called u
     > C
     >
 
+    Scatter-Gather runs all its routes in parallel, not sequentially. Both the 1-second and the 5-second routes start at the same time. The Scatter-Gather waits for all routes to finish before moving on, so the total time is determined by the slowest route, which is 5 seconds.
+    If they ran sequentially it would be 6 seconds (1 + 5), but that's not how Scatter-Gather works.
+
 **Explained**
 
 ---
@@ -1378,7 +1364,7 @@ What execution model is used by For Each and Batch Job scopes?
 
 ### Question 75
 
-A web client sends a POST request to the HTTP Listener with the payload `Hello-`.
+A web client sends a POST request to the HTTP Listener with the payload 'Hello-'.
 What response is returned to the web client?
 
 ![image.png](7ebcb8a8-4054-4df0-a5cd-67cb140da1eb.png)
@@ -1490,6 +1476,11 @@ What values are accessible to the Logger component at the end of the main flow?
     
     > C
     >
+After the HTTP Request (POST to /child) executes, two things change in the main flow's Mule event. The payload gets replaced with the response body from the child flow. The attributes get replaced with the HTTP response attributes from that call.
+This means the original query parameters (pedigree) that came in through the main flow's HTTP Listener are gone. They lived in the original attributes.queryParams, but those attributes were overwritten when the HTTP Request returned its response.
+However, variables are not affected by HTTP Request calls. The producer variable was set before the HTTP Request and it persists through it.
+So at the Logger, you have access to the new payload (child's response) and the producer variable, but not the original pedigree query parameters.
+This is an important distinction from a Flow Reference, which shares the entire Mule event and preserves attributes. An HTTP Request is a network call that creates a new HTTP response, replacing both payload and attributes.
 
 **Explained**
 
@@ -1581,6 +1572,9 @@ What is the value of the payload displayed in the debugger at this breakpoint?
     
     > B *(community voted B)*
     >
+    The error message is clear: the findFlight operation requires input parameters, but none were provided. The Web Service Consumer is a SOAP connector, and SOAP operations expect their input as an XML body that matches the WSDL's expected request structure.
+    The destination query parameter comes in through the HTTP Listener, but it's not being passed along to the Consume operation. You need to set the payload to a properly structured XML/SOAP body containing the destination value before the Consume operation runs.
+    Why not the others: A (headers) is for SOAP headers, not the operation's input parameters. C (property) is not how you pass input to a SOAP operation. D (JSON payload) won't work because SOAP expects XML, not JSON.
 
 **Explained**
 
@@ -1617,8 +1611,11 @@ What DataWeave expression transforms the conductorIds array to the XML output?
 - D. [ “Apple1”, “Banana1”, 2 ]
 - **Correct Answer:**
     
-    > C
+    > A
     >
+
+    The Logger is in the On Complete phase of the Batch Job. At that point, the payload is always a BatchJobResult object containing processing statistics, not the actual data that was transformed in the batch steps.
+    It doesn't matter that the batch steps appended "1" and "2" to each record. None of that transformed data makes it to the On Complete phase as the payload.
 
 **Explained**
 
@@ -2317,6 +2314,10 @@ What DataWeave expression transforms the example XML input to the CSV output?
     > A
     >
 
+    Two things matter here:
+    The *item selector — There are multiple <item> elements under <sale>. In DataWeave, *item selects all repeated elements as an array you can iterate over with map. Using just .item would only select the first one.
+    The @ notation for attributes — saleId and itemId are XML attributes (they're inside the opening tag: <item itemId="592" saleId="1000">), not child elements. In DataWeave, you access XML attributes with the @ prefix, so value.@saleId and value.@itemId. Using value.saleId without @ would look    for a child element named saleId, which doesn't exist.
+
 **Explained**
 
 ---
@@ -2917,6 +2918,9 @@ After the Batch Job scope completes processing the input payload, what informati
     > D
     >
 
+    In a Batch Job, the On Complete phase does not receive the original payload or the processed records. Instead, the payload at that point is a BatchJobResult object, which is a summary report containing statistics about how the batch processing went — total records, successes, failures, and so on.
+    So even though the logger is configured as message="#[payload]", it's not logging the array or the uppercased strings. It's logging that summary object, which gives you the record counts. 
+
 **Explained**
 
 ---
@@ -3295,8 +3299,22 @@ What response is returned from the request to the getTemp flow’s HTTP Listener
 - D. { "temp": "85" }
 - **Correct Answer:**
 
-    > B
+    > D
     >
+
+    Here's the trace:
+    The test flow sets the payload to the array [70, 65, 100, 60, 85] and iterates over it with a For Each, POSTing each value to /updateTemp.x\
+    The updateTemp flow stores each value in the Object Store with the key "temp". Since the key is the same every time, each iteration overwrites the previous value:
+
+    Iteration 1: key "temp" = 70
+    Iteration 2: key "temp" = 65 (overwrites)
+    Iteration 3: key "temp" = 100 (overwrites)
+    Iteration 4: key "temp" = 60 (overwrites)
+    Iteration 5: key "temp" = 85 (overwrites)
+
+    So after the test flow finishes, the Object Store contains a single entry: "temp": "85".
+    Then the getTemp flow is called. It does a retrieve-all, which returns all key-value pairs from the Object Store. There's only one pair, so the JSON output is { "temp": "85" }.
+
 
 **Explained**
 
@@ -3381,11 +3399,11 @@ Input payload:
 - **Correct Answer:**
     
     > B
-    >
+    > 
+    
 
-    ### **Explained**
 
-        The Shipping Address operation has its target set to shippingAddress. When you configure a target on a connector operation, the operation's response gets stored in a variable instead of overwriting the payload. That means the original payload (with the user and items) remains untouched.
+**Explained**
 
 ---
  
@@ -3405,7 +3423,10 @@ What attribute value must be changed in the webClient flow’s HTTP Request oper
     > D
     >
 
+    The Shipping Address operation has its target set to shippingAddress. When you configure a target on a connector operation, the operation's response gets stored in a variable instead of overwriting the payload. That means the original payload (with the user and items) remains untouched.
+
 **Explained**
+
 
 ---
 
@@ -3474,6 +3495,8 @@ What attribute value must be changed in the webClient flow’s HTTP Request oper
     
     > B
     >
+
+    
 
 **Explained**
 
